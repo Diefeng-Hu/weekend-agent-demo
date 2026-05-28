@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#05060A">
+  <title>百度地图周末探索</title>
+  <script src="https://api.map.baidu.com/api?v=1.0&type=webgl&ak=78YMsBMPcm19fynt9S07sjj0qkcnWm0Q"></script>
+  <style>
+    :root {
+      --ios-blue: #0A84FF;
+      --ios-green: #30D158;
+      --bg: #05060A;
+      --bg-2: #0B1220;
+      --panel: rgba(28,28,30,0.72);
+      --panel-strong: rgba(44,44,46,0.86);
+      --panel-soft: rgba(255,255,255,0.07);
+      --text: #F5F5F7;
+      --text-secondary: rgba(235,235,245,0.72);
+      --text-tertiary: rgba(235,235,245,0.45);
+      --hairline: rgba(255,255,255,0.12);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 50% -10%, rgba(10,132,255,0.32), transparent 34%),
+        radial-gradient(circle at 88% 18%, rgba(48,209,88,0.12), transparent 24%),
+        linear-gradient(180deg, #05060A 0%, #070B13 46%, #030407 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      overflow: hidden;
+    }
+
+    .phone {
+      width: min(390px, 100vw);
+      height: min(844px, 100vh);
+      max-height: 844px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg);
+      border-radius: 44px;
+      box-shadow: 0 0 0 10px #2a2a2a, 0 30px 80px rgba(0,0,0,0.35);
+    }
+
+    .status-bar {
+      height: 54px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 28px 10px;
+      background: rgba(0,0,0,0.54);
+      position: relative;
+      z-index: 5;
+    }
+
+    .status-bar span { font-size: 15px; font-weight: 700; }
+
+    .island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 124px;
+      height: 36px;
+      transform: translateX(-50%);
+      border-radius: 20px;
+      background: #000;
+      z-index: 10;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .topbar {
+      flex-shrink: 0;
+      padding: var(--space-md);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      background: var(--panel);
+      border-bottom: 0.5px solid var(--hairline);
+      position: relative;
+      z-index: 4;
+    }
+
+    .eyebrow {
+      margin: 0 0 var(--space-xs);
+      color: var(--ios-green);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.08;
+      font-weight: 860;
+      letter-spacing: -0.9px;
+    }
+
+    .subtitle {
+      margin: var(--space-sm) 0 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
+    #map {
+      flex: 1;
+      min-height: 0;
+      background: var(--bg-2);
+    }
+
+    .sheet {
+      position: absolute;
+      left: var(--space-md);
+      right: var(--space-md);
+      bottom: calc(var(--space-md) + 5px);
+      padding: var(--space-md);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      background: var(--panel);
+      border: 0.5px solid var(--hairline);
+      box-shadow: var(--shadow);
+      z-index: 6;
+    }
+
+    .place-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .place-title strong {
+      font-size: 17px;
+      font-weight: 820;
+      letter-spacing: -0.3px;
+    }
+
+    .pill {
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: 999px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 0.5px solid var(--hairline);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .place-desc {
+      margin: 0 0 var(--space-md);
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: var(--radius-md);
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 0.5px solid var(--hairline);
+      font-size: 13px;
+      font-weight: 760;
+      font-family: inherit;
+    }
+
+    button.primary {
+      background: var(--ios-blue);
+      box-shadow: 0 14px 32px rgba(10, 132, 255, 0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .home-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: var(--space-sm);
+      width: 134px;
+      height: 5px;
+      transform: translateX(-50%);
+      border-radius: 3px;
+      background: rgba(245,245,247,0.52);
+      z-index: 7;
+      pointer-events: none;
+    }
+
+    @media (max-width: 430px) {
+      body { padding: 0; }
+      .phone { width: 100vw; height: 100vh; max-height: none; border-radius: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <div class="island"></div>
+    <div class="status-bar">
+      <span id="clock">9:41</span>
+      <span>5G  ▰</span>
+    </div>
+
+    <header class="topbar">
+      <p class="eyebrow">BMapGL · 周末探索</p>
+      <h1>北京城市地图</h1>
+      <p class="subtitle">选择一个推荐地点，地图会自动定位并显示标记。可拖拽、缩放，适合做周末活动规划入口。</p>
+    </header>
+
+    <section id="map" aria-label="百度地图"></section>
+
+    <section class="sheet">
+      <div class="place-title">
+        <strong id="placeName">北京中心</strong>
+        <span class="pill" id="placeTag">城市概览</span>
+      </div>
+      <p class="place-desc" id="placeDesc">从北京中心开始浏览，选择下方推荐地点查看周末活动区域。</p>
+      <div class="actions">
+        <button class="primary" onclick="focusPlace('sanlitun')">📍 三里屯</button>
+        <button onclick="focusPlace('art798')">🎨 798 艺术区</button>
+        <button onclick="focusPlace('chaoyang')">🌳 朝阳公园</button>
+        <button onclick="focusPlace('center')">🧭 回到中心</button>
+      </div>
+    </section>
+
+    <div class="home-indicator"></div>
+  </main>
+
+  <script>
+    const places = {
+      center: {
+        lng: 116.404,
+        lat: 39.915,
+        zoom: 12,
+        name: '北京中心',
+        tag: '城市概览',
+        desc: '从北京中心开始浏览，选择下方推荐地点查看周末活动区域。'
+      },
+      sanlitun: {
+        lng: 116.4551,
+        lat: 39.9392,
+        zoom: 16,
+        name: '三里屯',
+        tag: '夜生活 · 餐饮',
+        desc: '适合朋友聚会、约会晚餐和小酒馆路线，周边餐饮与商场选择密集。'
+      },
+      art798: {
+        lng: 116.5019,
+        lat: 39.9842,
+        zoom: 16,
+        name: '798 艺术区',
+        tag: '展览 · 拍照',
+        desc: '适合城市文艺探店、展览打卡和下午咖啡路线，步行体验友好。'
+      },
+      chaoyang: {
+        lng: 116.4847,
+        lat: 39.9475,
+        zoom: 15,
+        name: '朝阳公园',
+        tag: '户外 · 亲子',
+        desc: '适合亲子放电、户外散步和轻松野餐，空间开阔，节奏更放松。'
+      }
+    };
+
+    let map;
+    const markers = [];
+
+    function initMap() {
+      if (!window.BMapGL) return;
+      map = new BMapGL.Map('map');
+      const center = new BMapGL.Point(places.center.lng, places.center.lat);
+      map.centerAndZoom(center, places.center.zoom);
+      map.enableScrollWheelZoom(true);
+      map.addControl(new BMapGL.ZoomControl());
+
+      Object.entries(places).forEach(([key, place]) => {
+        if (key === 'center') return;
+        const point = new BMapGL.Point(place.lng, place.lat);
+        const marker = new BMapGL.Marker(point);
+        map.addOverlay(marker);
+        marker.addEventListener('click', () => focusPlace(key));
+        markers.push(marker);
+      });
+    }
+
+    function focusPlace(key) {
+      const place = places[key] || places.center;
+      document.getElementById('placeName').textContent = place.name;
+      document.getElementById('placeTag').textContent = place.tag;
+      document.getElementById('placeDesc').textContent = place.desc;
+
+      if (!map || !window.BMapGL) return;
+      const point = new BMapGL.Point(place.lng, place.lat);
+      map.centerAndZoom(point, place.zoom);
+
+      if (key === 'center') return;
+      const label = new BMapGL.Label(place.name, { position: point, offset: new BMapGL.Size(16, -34) });
+      label.setStyle({
+        color: '#F5F5F7',
+        backgroundColor: 'rgba(28,28,30,.86)',
+        border: '0.5px solid rgba(255,255,255,.18)',
+        borderRadius: '12px',
+        padding: '6px 10px',
+        fontSize: '12px',
+        fontWeight: '700',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
+      });
+      map.addOverlay(label);
+      setTimeout(() => map.removeOverlay(label), 1800);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+
+    window.addEventListener('load', () => {
+      updateClock();
+      setInterval(updateClock, 5000);
+      initMap();
+    });
+  </script>
+</body>
+</html>
